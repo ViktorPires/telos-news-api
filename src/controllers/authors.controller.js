@@ -117,5 +117,5 @@ module.exports = {
     create,
     update,
     remove,
-    userDataBase: authors,
+    authorDataBase: authors,
 };
