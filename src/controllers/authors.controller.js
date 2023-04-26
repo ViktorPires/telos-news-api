@@ -1,4 +1,5 @@
 const uuid = require('uuid');
+const moment = require('moment');
 
 const authors = [
     {
@@ -7,8 +8,8 @@ const authors = [
         "biography": "John Smith is an acclaimed author with over 10 years of experience in writing science fiction. He has published several award-winning books and is known for his engaging plots and captivating characters.",
         "email": "john.smith@email.com",
         "password": "password123",
-        "createdAt": "2/28/2023, 12:30:20 PM",
-        "modifiedAt": "4/17/2023, 08:55:46 PM"
+        "createdAt": "02/28/2023, 12:30:20 PM",
+        "modifiedAt": "04/17/2023, 08:55:46 PM"
     }
 ];
 
@@ -45,7 +46,8 @@ const create = (request, response) => {
 
     const id = uuid.v4();
 
-    const createdAt = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+    const createdAt = moment().utcOffset('-03:00');
+    const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
 
     const author = {
         id,
@@ -53,8 +55,8 @@ const create = (request, response) => {
         biography,
         email,
         password,
-        createdAt,
-        modifiedAt: null,
+        createdAt: formattedDate,
+        modifiedAt: null
     };
     
     authors.push(author);
@@ -77,7 +79,9 @@ const update = (request, response) => {
 
     const author = authors[authorIndex];
     const createdAt = author.createdAt;
-    const modifiedAt = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+
+    const modifiedAt = moment().utcOffset('-03:00');
+    const formattedDate = modifiedAt.format('MM/DD/YYYY, h:mm:ss A');
 
     const authorUpdated = {
         id,
@@ -86,7 +90,7 @@ const update = (request, response) => {
         email,
         password,
         createdAt,
-        modifiedAt,
+        modifiedAt: formattedDate
     };
 
     authors[authorIndex] = authorUpdated;
