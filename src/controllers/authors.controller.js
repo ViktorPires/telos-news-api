@@ -1,13 +1,15 @@
 const uuid = require('uuid');
 const moment = require('moment');
 
+const { generateHash, compareHash } = require('../utils/hashProvider');
+
 const authors = [
     {
         "id": "c6e54744-b44d-45a2-8391-b46b2f5dabdb",
         "name": "John Smith",
         "biography": "John Smith is an acclaimed author with over 10 years of experience in writing science fiction. He has published several award-winning books and is known for his engaging plots and captivating characters.",
         "email": "john.smith@email.com",
-        "password": "password123",
+        "password": "$2a$08$Ow0jIpmUYGWmh1Nwtvz4vOqkmBlz6mao2eAyZHkl1osxTiKgncDwG",
         "createdAt": "02/28/2023, 12:30:20 PM",
         "modifiedAt": "04/17/2023, 08:55:46 PM"
     }
@@ -32,7 +34,7 @@ const getById = (request, response) => {
    return response.json(author);
 };
 
-const create = (request, response) => {
+const create = async (request, response) => {
     const { name , biography, email, password } = request.body;
 
     const authorExists = authors.find((a) => a.email === email);
@@ -46,6 +48,8 @@ const create = (request, response) => {
 
     const id = uuid.v4();
 
+    const hashedPassword = await generateHash(password);
+
     const createdAt = moment().utcOffset('-03:00');
     const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
 
@@ -54,7 +58,7 @@ const create = (request, response) => {
         name,
         biography,
         email,
-        password,
+        password: hashedPassword,
         createdAt: formattedDate,
         modifiedAt: null
     };
@@ -64,7 +68,7 @@ const create = (request, response) => {
    return response.status(201).json(author);
 };
 
-const update = (request, response) => {
+const update = async (request, response) => {
     const { id } = request.params;
     const { name, biography, email, password } = request.body;
 
@@ -78,6 +82,10 @@ const update = (request, response) => {
     };
 
     const author = authors[authorIndex];
+
+    const isSamePassword = await compareHash(password, author.password);
+    const hashedPassword = isSamePassword ? author.password : await generateHash(password);
+
     const createdAt = author.createdAt;
 
     const modifiedAt = moment().utcOffset('-03:00');
@@ -88,7 +96,7 @@ const update = (request, response) => {
         name,
         biography,
         email,
-        password,
+        password: hashedPassword,
         createdAt,
         modifiedAt: formattedDate
     };
