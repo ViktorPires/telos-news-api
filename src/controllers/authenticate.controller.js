@@ -26,13 +26,15 @@ const login = async (request, response) => {
         return response.status(400).json(loginErrorMessage);
     };
 
-    const { id, name, biography, email: authorEmail, createdAt, modifiedAt } = author;
-
     const token = jwt.sign(author, JWT_SECRET, {
         expiresIn: "1h",
     });
 
-    return response.json({ id, name, biography, email: authorEmail, createdAt, modifiedAt, token });
+    const authorLogged= {...author};
+
+    delete authorLogged.password;
+
+    return response.json({ authorLogged, token });
 };
 
 module.exports = {
