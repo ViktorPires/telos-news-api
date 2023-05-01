@@ -13,8 +13,8 @@ routes.get('/news/:id', newsController.getById);
 
 routes.post('/news', verifyAuthenticate, newsController.create);
 
-routes.put('/news/:id', newsController.update);
+routes.put('/news/:id', verifyAuthenticate, newsController.update);
 
-routes.delete('/news/:id', newsController.remove);
+routes.delete('/news/:id', verifyAuthenticate, newsController.remove);
 
 module.exports = routes;

@@ -11,7 +11,9 @@ const news = [
         "image": "https://example.com/news/image.jpg",
         "publish_date": "04/25/2023",
         "createdAt": "04/25/2023, 10:30:15 AM",
-        "modifiedAt": "04/26/2023, 11:45:20 AM"
+        "modifiedAt": "04/26/2023, 11:45:20 AM",
+        "modifiedLastBy": "c6e54744-b44d-45a2-8391-b46b2f5dabdb",
+        "modifiedByAuthor": ["c6e54744-b44d-45a2-8391-b46b2f5dabdb"]
     }     
 ];
 
@@ -74,7 +76,9 @@ const create = (request, response) => {
         image,
         publish_date,
         createdAt: formattedDate,
-        modifiedAt: null
+        modifiedAt: null,
+        modifiedLastBy: null,
+        modifiedByAuthor: []
     };
 
     news.push(info);
@@ -85,6 +89,7 @@ const create = (request, response) => {
 const update = (request, response) => {
     const { id } = request.params;
     const { title, brief, content, image, publish_date} = request.body;
+    const modifiedLastBy = request.author.id;
 
     const infoIndex = news.findIndex((n) => n.id === id);
 
@@ -105,6 +110,13 @@ const update = (request, response) => {
     const info = news[infoIndex];
     const author_id = info.author_id;
     const createdAt = info.createdAt;
+    const modifiedByAuthor = info.modifiedByAuthor;
+
+    const verifyAuthor = modifiedByAuthor.findIndex((a) => a === modifiedLastBy);
+
+    if(verifyAuthor < 0) {
+        modifiedByAuthor.push(modifiedLastBy);
+    };
 
     const modifiedAt = moment().utcOffset('-03:00');
     const formattedDate = modifiedAt.format('MM/DD/YYYY, h:mm:ss A');
@@ -118,7 +130,9 @@ const update = (request, response) => {
         image,
         publish_date,
         createdAt,
-        modifiedAt: formattedDate
+        modifiedAt: formattedDate,
+        modifiedLastBy,
+        modifiedByAuthor
     };
 
     news[infoIndex] = infoUpdated;
