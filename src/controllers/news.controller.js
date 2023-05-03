@@ -1,6 +1,10 @@
 const uuid = require('uuid');
 const moment = require('moment');
 
+const NewsModel = require('../model/news.model');
+
+const { NotFoundException } = require('../exceptions/NotFoundException');
+
 const news = [
     {
         "id": "ff747c2c-2aea-49fe-86db-edb532835c44",
@@ -17,23 +21,35 @@ const news = [
     }     
 ];
 
-const list = (request, response) => {
+const list = async (request, response) => {
     const { author_id } = request.query;
-   
-     if(author_id) {
-        const filteredNews = news.filter((n) => n.author_id === author_id);
 
-        if(filteredNews.length === 0) {
+    try {
+        if(author_id) {
+                const filteredNews = await NewsModel.find({author_id: author_id});
+
+                if(!filteredNews || filteredNews.length === 0) {
+                    throw new NotFoundException(`No news found for author with ID ${author_id}`);
+                };
+
+                return response.json(filteredNews);
+            };
+
+        const news = await NewsModel.find();
+
+        return response.json(news);
+    } catch(err) {
+        if (err instanceof NotFoundException) {
             return response.status(404).json({
                 error: '@news/list',
-                message: `No news found for author with ID ${author_id}`
+                message: err.message,
             });
-        };
-
-        return response.json(filteredNews);
-    };
-
-    return response.json(news);
+        }
+        return response.status(400).json({
+            error: '@news/list',
+            message: err.message || "Failed to list news",
+        });
+    }
 };
 
 const getById = (request, response) => {
