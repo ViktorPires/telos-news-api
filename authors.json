@@ -1,0 +1,26 @@
+[
+    {
+        "name": "John Smith",
+        "biography": "John Smith is an acclaimed author with over 10 years of experience in writing science fiction. He has published several award-winning books and is known for his engaging plots and captivating characters.",
+        "email": "john.smith@email.com",
+        "password": "$2a$08$Ow0jIpmUYGWmh1Nwtvz4vOqkmBlz6mao2eAyZHkl1osxTiKgncDwG",
+        "createdAt": "02/28/2023, 12:30:20 PM",
+        "modifiedAt": "04/17/2023, 08:55:46 PM"
+    },
+    {
+        "name": "Jane Smith",
+        "biography": "Jane Smith is an accomplished journalist with over a decade of experience covering international news. She has reported from conflict zones around the world and has received several awards for her reporting on human rights issues.",
+        "email": "jane.smith@email.com",
+        "password": "$2a$08$YPI09vAtNmVGYZ2aOVBrZe/fUQeFZ9btnUu9/lGn5myCZisJjmj7a",
+        "createdAt": "05/01/2023, 3:51:16 PM",
+        "modifiedAt": null
+    },
+    {
+        "name": "Mark Johnson",
+        "biography": "Mark Johnson is a well-known travel writer who has written for numerous publications. He has visited over 50 countries and is known for his vivid descriptions of local culture and cuisine.",
+        "email": "mark.johnson@email.com",
+        "password": "$2a$08$FnpjhJDb4bEbZikxUff69uARdraLIzYik1iA9xH2wsuAFaQwRfWqW",
+        "createdAt": "05/01/2023, 3:53:06 PM",
+        "modifiedAt": null
+    }
+]

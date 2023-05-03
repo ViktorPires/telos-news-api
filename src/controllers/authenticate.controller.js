@@ -2,14 +2,14 @@ const jwt = require('jsonwebtoken');
 
 const { JWT_SECRET } = require('../config/env');
 
-const { authorDataBase } = require('./authors.controller');
+const AuthorModel = require("../model/author.model");
 
 const { compareHash } = require("../utils/hashProvider");
 
 const login = async (request, response) => {
     const { email, password } = request.body;
 
-    const author = authorDataBase.find((a) => a.email === email);
+    const author = await AuthorModel.findOne({ email }).lean();
 
     const loginErrorMessage = {
         error: '@authenticate/login',
@@ -30,11 +30,9 @@ const login = async (request, response) => {
         expiresIn: "1h",
     });
 
-    const authorLogged= {...author};
+    delete author.password;
 
-    delete authorLogged.password;
-
-    return response.json({ authorLogged, token });
+    return response.json({ ...author, token });
 };
 
 module.exports = {

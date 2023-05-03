@@ -1,126 +1,120 @@
-const uuid = require('uuid');
 const moment = require('moment');
 
-const { generateHash, compareHash } = require('../utils/hashProvider');
+const { compareHash } = require('../utils/hashProvider');
 
-const authors = [
-    {
-        "id": "c6e54744-b44d-45a2-8391-b46b2f5dabdb",
-        "name": "John Smith",
-        "biography": "John Smith is an acclaimed author with over 10 years of experience in writing science fiction. He has published several award-winning books and is known for his engaging plots and captivating characters.",
-        "email": "john.smith@email.com",
-        "password": "$2a$08$Ow0jIpmUYGWmh1Nwtvz4vOqkmBlz6mao2eAyZHkl1osxTiKgncDwG",
-        "createdAt": "02/28/2023, 12:30:20 PM",
-        "modifiedAt": "04/17/2023, 08:55:46 PM"
-    }
-];
+const AuthorModel = require("../model/author.model");
 
-const list = (request, response) => {
-   return response.json(authors);
-};
+const list = async (request, response) => {
+    try {
+        const authors = await AuthorModel.find({}, { password: 0 });
 
-const getById = (request, response) => {
-    const { id } = request.params;
-
-    const author = authors.find((a) => a.id === id);
-
-    if(!author) {
+         return response.json(authors);
+    } catch(err) {
         return response.status(400).json({
-            error: '@authors/getByID',
-            message: `Author not found ${id}`
+            error: "@authors/list",
+            message: err.message || "Failed to list authors",
         });
     }
-
-   return response.json(author);
 };
+
+const getById = async (request, response) => {
+    const { id } = request.params;
+
+    try{
+        const author = await AuthorModel.findById(id, { password: 0 });
+        
+        if(!author) {
+            throw new Error();
+        };
+
+        return response.json(author);
+    } catch(err) {
+        return response.status(400).json({
+            error: '@authors/getByID',
+            message: err.message || `Author not found ${id}`,
+            });
+        }
+    };
 
 const create = async (request, response) => {
     const { name , biography, email, password } = request.body;
 
-    const authorExists = authors.find((a) => a.email === email);
-      
-    if(authorExists) {
-        return response.status(400).json({
-            error: '@authors/create',
-            message: "E-mail already registered" 
+    try {
+        const createdAt = moment().utcOffset('-03:00');
+        const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
+
+        const author = await AuthorModel.create({
+            name,
+            biography,
+            email,
+            password,
+            createdAt: formattedDate,
+            modifiedAt: null
         });
+        return response.status(201).json(author);
+    } catch(err) {
+        return response.status(400).json({
+            error: "@authors/create",
+            message: err.message || "Failed to create author",
+        }); 
     };
-
-    const id = uuid.v4();
-
-    const hashedPassword = await generateHash(password);
-
-    const createdAt = moment().utcOffset('-03:00');
-    const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
-
-    const author = {
-        id,
-        name,
-        biography,
-        email,
-        password: hashedPassword,
-        createdAt: formattedDate,
-        modifiedAt: null
-    };
-    
-    authors.push(author);
-
-   return response.status(201).json(author);
 };
 
 const update = async (request, response) => {
     const { id } = request.params;
     const { name, biography, email, password } = request.body;
 
-    const authorIndex = authors.findIndex((a) => a.id === id);
+    try{
+        const modifiedAt = moment().utcOffset('-03:00');
+        const formattedDate = modifiedAt.format('MM/DD/YYYY, h:mm:ss A');
 
-    if(authorIndex < 0) {
-        return response.status(400).json({
+        const authorDB = await AuthorModel.findById(id).select('password');
+
+        const isSamePassword = await compareHash(password, authorDB.password);
+
+        const authorUpdated = await AuthorModel.findByIdAndUpdate(id, {
+                name,
+                biography,
+                email,
+                password,
+                modifiedAt: formattedDate
+            },
+            {  
+                new: true,
+                isSamePassword: isSamePassword
+            }
+        );
+
+        if(!authorUpdated) {
+            throw new Error();
+        }
+        
+        return response.json(authorUpdated);
+    } catch(err) {
+         return response.status(400).json({
             error: '@authors/update',
-            message: `Author not found ${id}`
+            message: err.message || `Author not found ${id}`
         });
-    };
-
-    const author = authors[authorIndex];
-
-    const isSamePassword = await compareHash(password, author.password);
-    const hashedPassword = isSamePassword ? author.password : await generateHash(password);
-
-    const createdAt = author.createdAt;
-
-    const modifiedAt = moment().utcOffset('-03:00');
-    const formattedDate = modifiedAt.format('MM/DD/YYYY, h:mm:ss A');
-
-    const authorUpdated = {
-        id,
-        name,
-        biography,
-        email,
-        password: hashedPassword,
-        createdAt,
-        modifiedAt: formattedDate
-    };
-
-    authors[authorIndex] = authorUpdated;
-
-   return response.json(authorUpdated);
+    }
 };
 
-const remove = (request, response) => {
+const remove = async (request, response) => {
     const { id } = request.params;
 
-    const authorIndex = authors.findIndex((a) => a.id === id);
+    try {
+        const authorDeleted = await AuthorModel.findByIdAndDelete(id);
 
-    if(authorIndex < 0) {
+        if(!authorDeleted) {
+            throw new Error();
+        }
+
+        return response.status(204).send();
+    } catch(err) {
         return response.status(400).json({
             error: '@authors/remove',
-            message: `Author not found ${id}`
+            message: err.message || `Author not found ${id}`
         });
-    };
-
-    authors.splice(authorIndex, 1);
-
-    return response.send();
+    }
 };
 
 module.exports = {
@@ -129,5 +123,4 @@ module.exports = {
     create,
     update,
     remove,
-    authorDataBase: authors,
 };
