@@ -4,6 +4,7 @@ const moment = require('moment');
 const NewsModel = require('../model/news.model');
 
 const { NotFoundException } = require('../exceptions/NotFoundException');
+const { PublishDateException } = require('../exceptions/PublishDateException');
 
 const news = [
     {
@@ -39,7 +40,7 @@ const list = async (request, response) => {
 
         return response.json(news);
     } catch(err) {
-        if (err instanceof NotFoundException) {
+        if(err instanceof NotFoundException) {
             return response.status(404).json({
                 error: '@news/list',
                 message: err.message,
@@ -71,39 +72,44 @@ const getById = async (request, response) => {
     }
 };
 
-const create = (request, response) => {
+const create = async (request, response) => {
     const { title, brief, content, image, publish_date } = request.body;
     const author_id = request.author.id;
 
-     if(!publish_date || !moment(publish_date, 'MM/DD/YYYY', true).isValid()) {
-        return response.status(400).json({
-            error: '@news/create',
-            message: 'Publish date is required and should be in format MM/DD/YYYY',
+    try {
+        if(!publish_date || !moment(publish_date, 'MM/DD/YYYY', true).isValid()) {
+           throw new PublishDateException('Publish date is required and should be in format MM/DD/YYYY');
+        };
+
+        const createdAt = moment().utcOffset('-03:00');
+        const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
+
+        const info = await NewsModel.create({
+            title,
+            brief,
+            content,
+            author_id,
+            image,
+            publish_date,
+            createdAt: formattedDate,
+            modifiedAt: null,
+            modifiedLastBy: null,
+            modifiedByAuthor: []
         });
+
+        return response.status(201).json(info);
+    } catch(err) {
+        if(err instanceof PublishDateException) {
+            return response.status(400).json({
+                error: '@news/create',
+                message: err.message,
+                })
+            };
+            return response.status(400).json({
+                error: '@news/create',
+                message: err.message || "Failed to create a news",
+            });
     };
-
-    const id = uuid.v4();
-
-    const createdAt = moment().utcOffset('-03:00');
-    const formattedDate = createdAt.format('MM/DD/YYYY, h:mm:ss A');
-
-    const info = {
-        id,
-        title,
-        brief,
-        content,
-        author_id,
-        image,
-        publish_date,
-        createdAt: formattedDate,
-        modifiedAt: null,
-        modifiedLastBy: null,
-        modifiedByAuthor: []
-    };
-
-    news.push(info);
-
-    return response.status(201).json(info);
 };
 
 const update = (request, response) => {
