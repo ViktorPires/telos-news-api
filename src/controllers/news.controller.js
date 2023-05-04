@@ -1,4 +1,3 @@
-const uuid = require('uuid');
 const moment = require('moment');
 
 const NewsModel = require('../model/news.model');
@@ -45,7 +44,7 @@ const list = async (request, response) => {
                 error: '@news/list',
                 message: err.message,
             });
-        }
+        };
         return response.status(400).json({
             error: '@news/list',
             message: err.message || "Failed to list news",
@@ -166,21 +165,29 @@ const update = (request, response) => {
     return response.json(infoUpdated);
 };
 
-const remove = (request, response) => {
+const remove = async (request, response) => {
     const { id } = request.params;
 
-    const infoIndex = news.findIndex((n) => n.id === id);
+    try {
+        const infoRemoved = await NewsModel.findByIdAndDelete(id);
 
-    if(infoIndex < 0) {
+        if(!infoRemoved) {
+           throw new NotFoundException(`News not found ${id}`);
+        };
+
+    return response.status(204).send();
+    } catch(err) {
+        if(err instanceof NotFoundException) {
+            return response.status(404).json({
+                error: '@news/remove',
+                message: err.message,
+            });
+        };
         return response.status(400).json({
             error: '@news/remove',
-            message: `News not found ${id}`
+            message: err.message || "Failed to remove a news",
         });
-    };
-
-    news.splice(infoIndex, 1);
-
-    return response.send();
+    }
 };
 
 module.exports = {
