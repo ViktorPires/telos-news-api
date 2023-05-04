@@ -52,19 +52,23 @@ const list = async (request, response) => {
     }
 };
 
-const getById = (request, response) => {
+const getById = async (request, response) => {
     const { id } = request.params;
 
-    const info = news.find((n) => n.id === id);
+    try {
+        const info = await NewsModel.findById(id);
 
-    if(!info) {
+        if(!info) {
+           throw new Error();
+        };
+
+        return response.json(info);
+    } catch(err) {
         return response.status(400).json({
-            error: '@news/getById',
-            message: `News not found ${id}`,
-        });
-    };
-
-    return response.json(info);
+                error: '@news/getById',
+                message: err.message || `News not found ${id}`,
+            });
+    }
 };
 
 const create = (request, response) => {
